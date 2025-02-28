@@ -24,7 +24,11 @@ try {
     $consulta->execute();
     $user = $consulta->fetch(PDO::FETCH_ASSOC); //fetch(PDO::FETCH_ASSOC): Recupera el resultado de la consulta como un array asociativo. Si el usuario existe, obtendrás sus datos.
 
-    if ($user && password_verify($password, $user['password'])) {
+    if ($user && $user['password'] == $password) {
+        // Iniciar sesión y redirigir
+        session_start();
+        $_SESSION['usuario'] = $user['nombre_usuario'];
+        $_SESSION['email'] = $user['id'];
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['success' => false]);

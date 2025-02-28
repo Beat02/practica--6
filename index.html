@@ -29,38 +29,42 @@
 
     <script>
         const boton = document.getElementById("boton");
-        event.preventDefault();
+        //event.preventDefault();
         const emailNodo = document.getElementById("email");
         const passwordNodo = document.getElementById("password");
 
         const emailValue = emailNodo.value;
         const passwordValue = passwordNodo.value;
 
-        //AJAX
-        fetch('login.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email: emailValue,
-                password: passwordValue
-            })
+        document.getElementById("formulario").addEventListener("submit", function (event) {
+            event.preventDefault();
+            //AJAX
+            fetch('login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: emailValue,
+                    password: passwordValue
+                })
 
-        })
-            .then(response => response.json())
-            .then(data => {
-                //respuesta servidor
-                if (data.success) {
-                    window.location.href = 'listaCompra.html';
-                } else {
-                    alert('Error en el login')
-                }
             })
-            .catch(error => {
-                //manejar errores
-                console.error('Error:', error);
-            })
+                .then(response => response.json())
+                .then(data => {
+                    //respuesta servidor
+                    if (data.success) {
+                        window.location.href = 'listaCompra.html';
+                    } else {
+                        alert('Error en el login')
+                    }
+                })
+                .catch(error => {
+                    //manejar errores
+                    console.error('Error:', error);
+                })
+        });
+
 
     </script>
 
