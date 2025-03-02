@@ -12,7 +12,7 @@ $datos = json_decode(file_get_contents('php://input'), true);
 
 header('Content-Type: application/json');
 
-// Si es una petición para añadir un prod
+// Petición para añadir un prod
 if (isset($datos['objeto']) && isset($datos['cantidad'])) {
     $objeto = $datos['objeto'];
     $cantidad = $datos['cantidad'];
@@ -32,7 +32,7 @@ if (isset($datos['objeto']) && isset($datos['cantidad'])) {
     }
 }
 
-// Si recibimos 'id_compra', eliminar un prod
+// 'id_compra', eliminar un prod
 else if (isset($datos['id_compra'])) {
     $id_compra = $datos['id_compra'];
 
@@ -48,13 +48,13 @@ else if (isset($datos['id_compra'])) {
     }
 }
 
-// Si recibimos 'ultima_fecha', consulta prods nuevos!!
+// 'ultima_fecha', consulta prods nuevos!!
 else if (isset($datos['ultima_fecha'])) {
     $ultima_fecha = $datos['ultima_fecha'];
     $email_actual = $_SESSION['email'];
 
     try {
-        // Consultamos prods nuevos - CORREGIDO
+        // Consultamos prods nuevos
         $consulta = $pdo->prepare("SELECT c.id_compra, c.objeto, c.cantidad, c.id_comprador, c.fecha_hora, u.nombre_usuario 
                                     FROM compra c 
                                     INNER JOIN usuarios u ON c.id_comprador = u.id 

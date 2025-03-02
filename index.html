@@ -15,19 +15,20 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #CAD9C6;
         }
        
         #boton {
             margin: 20px 0;
             padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
+            background-color: #68BD48;
+            color: black;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
         #boton:hover {
-            background-color: #45a049;
+            background-color: #52D98F;
         }
     </style>
 </head>
@@ -75,12 +76,12 @@
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status}`);
                     }
-                    return response.text(); // Primero obtén el texto
+                    return response.text(); // Recoger texto
                 })
                 .then(text => {
-                    console.log("Respuesta del servidor:", text); // Verifica qué devuelve
+                    console.log("Respuesta del servidor:", text); // Verificar qué devuelve
                     try {
-                        return JSON.parse(text); // Luego intenta parsearlo como JSON
+                        return JSON.parse(text); // Intentar parsearlo como JSON
                     } catch (e) {
                         console.error("Error al parsear JSON:", e);
                         throw e;

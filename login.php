@@ -13,9 +13,6 @@ $data = json_decode(file_get_contents('php://input'), true);
 $email = $data['email'];
 $password = $data['password'];
 
-/*
-    Hacer una consulta SQL para verificar si el usuario
-    existe y si la contraseña proporcionada es correcta. */
 try {
 
     $consulta = $pdo->prepare("SELECT * FROM usuarios WHERE id= :email");

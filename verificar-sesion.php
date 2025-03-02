@@ -1,9 +1,8 @@
 <?php
 session_start();
 
-// Comprobar si existe la sesión de usuario
 if (isset($_SESSION['email']) && !empty($_SESSION['email'])) {
-    // El usuario tiene sesión activa
+    // Sesión activa
     echo json_encode([
         'autenticado' => true,
         'usuario' => $_SESSION['usuario'],

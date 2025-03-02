@@ -14,6 +14,7 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #D5E6D1;
         }
 
         #usuario-info {
@@ -24,7 +25,7 @@
         #add {
             margin: 20px 0;
             padding: 8px 16px;
-            background-color: #4CAF50;
+            background-color: #15692B;
             color: white;
             border: none;
             border-radius: 4px;
@@ -32,7 +33,7 @@
         }
 
         #add:hover {
-            background-color: #45a049;
+            background-color: #21A444;
         }
 
         .item-compra {
@@ -65,17 +66,17 @@
 
         .sumar,
         .quitar {
-            background-color: #007bff;
+            background-color: #4854BD;
             color: white;
         }
 
         .enviar {
-            background-color: #28a745;
+            background-color: #15692B;
             color: white;
         }
 
         .eliminar {
-            background-color: #dc3545;
+            background-color: #BC4D47;
             color: white;
         }
 
@@ -134,7 +135,7 @@
             // Evento para cerrar sesión
             document.getElementById('cerrar-sesion').addEventListener('click', cerrarSesion);
 
-            // Evento para el botón "Añadir artículo"
+            // Evento para botón Añadir artículo
             document.getElementById('add').addEventListener('click', nuevoDiv);
         });
 
@@ -330,7 +331,7 @@
 
         function mostrarProductos(productos) {
             const contenedor = document.getElementById('productos-guardados');
-            contenedor.innerHTML = ''; 
+            contenedor.innerHTML = '';
 
             if (!productos || productos.length === 0) {
                 contenedor.innerHTML = '<p>No hay productos en la lista</p>';
@@ -416,13 +417,19 @@
                 clearInterval(temporizador);
             }
 
+            // Limpiar el temporizador existente antes de crear uno nuevo
             temporizador = setInterval(verificarNuevosProductos, 3000);
+            console.log("Temporizador iniciado correctamente");
         }
 
         function verificarNuevosProductos() {
             // Sin fecha no hacemos nada
-            console.log(ultimaFecha);
-            if (!ultimaFecha) return;
+            if (!ultimaFecha) {
+                console.log("No hay fecha última para verificar productos nuevos");
+                return;
+            }
+
+            console.log("Verificando nuevos productos desde: " + ultimaFecha);
 
             fetch('compra.php', {
                 method: 'POST',
@@ -433,52 +440,34 @@
                     ultima_fecha: ultimaFecha
                 })
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor: ' + response.status);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
-                        // Si prods nuevos, añadimos a la lista
+                        // Si hay prods nuevos, añadimos a la lista
                         if (data.productos_nuevos && data.productos_nuevos.length > 0) {
                             console.log("Se encontraron " + data.productos_nuevos.length + " productos nuevos");
 
-                            // Cargar nuevos prods lista existente
-                            const contenedor = document.getElementById('productos-guardados');
+                            // Recargamos toda la lista
+                            cargarProductos();
 
-                            // Añadir nuevos prods a la lista
-                            data.productos_nuevos.forEach(producto => {
-                                const productoDiv = document.createElement('div');
-                                productoDiv.classList.add('producto');
-                                productoDiv.dataset.id = producto.id_compra;
-
-                                const productoInfo = document.createElement('div');
-                                productoInfo.classList.add('producto-info');
-
-                                // Info del prod
-                                const productoNombre = document.createElement('strong');
-                                productoNombre.textContent = producto.objeto;
-
-                                const productoCantidad = document.createElement('span');
-                                productoCantidad.textContent = ` (${producto.cantidad})`;
-
-                                const productoUsuario = document.createElement('em');
-                                productoUsuario.textContent = ` - Añadido por: ${producto.nombre_usuario}`;
-
-                                productoInfo.appendChild(productoNombre);
-                                productoInfo.appendChild(productoCantidad);
-                                productoInfo.appendChild(productoUsuario);
-
-                                productoDiv.appendChild(productoInfo);
-                                contenedor.appendChild(productoDiv);
-                            });
-
-                            console.log('Se han añadido ' + data.productos_nuevos.length + ' nuevos productos a la lista');
+                            // Actualizamos la última fecha
+                            if (data.fecha_actual) {
+                                ultimaFecha = data.fecha_actual;
+                                console.log("Actualizada última fecha a: " + ultimaFecha);
+                            }
                         } else {
                             console.log("No se encontraron productos nuevos");
-                        }
 
-                        // Actualizamos última fecha
-                        if (data.fecha_actual) {
-                            console.log("Actualizando última fecha a: " + data.fecha_actual);
-                            ultimaFecha = data.fecha_actual;
+                            // Actualizamos la última fecha aunque no haya prods nuevos!!
+                            if (data.fecha_actual) {
+                                ultimaFecha = data.fecha_actual;
+                                console.log("Actualizada última fecha a: " + ultimaFecha);
+                            }
                         }
                     } else {
                         console.error("Error en la respuesta del servidor:", data.message || "Error desconocido");
