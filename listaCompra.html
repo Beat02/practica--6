@@ -34,6 +34,71 @@
         #add:hover {
             background-color: #45a049;
         }
+
+        .item-compra {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .input-articulo {
+            flex: 1;
+            margin-right: 10px;
+            padding: 5px;
+        }
+
+        .cantidad {
+            margin: 0 10px;
+            font-weight: bold;
+        }
+
+        button {
+            margin: 0 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .sumar,
+        .quitar {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .enviar {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .eliminar {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        #productos-guardados {
+            margin-top: 20px;
+        }
+
+        .producto {
+            background-color: #e9ecef;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .producto-info {
+            flex: 1;
+        }
+
+        .producto-acciones {
+            margin-left: 10px;
+        }
     </style>
 </head>
 
@@ -51,18 +116,29 @@
     <div id="mostrar-lista">
 
     </div>
+
+    <h2>Productos en la lista:</h2>
+    <div id="productos-guardados">
+
+    </div>
+
     <script>
+        // Variables globales
+        let ultimaFecha;
+        let temporizador = null;
+
         document.addEventListener('DOMContentLoaded', function () {
-            // sesion activa?
-            verficarSesion();
-            // cerrar sesión
+            // Verificar sesión activa
+            verificarSesion();
+
+            // Evento para cerrar sesión
             document.getElementById('cerrar-sesion').addEventListener('click', cerrarSesion);
-            // botón "Añadir artículo"
+
+            // Evento para el botón "Añadir artículo"
             document.getElementById('add').addEventListener('click', nuevoDiv);
         });
 
-        function verficarSesion() {
-
+        function verificarSesion() {
             fetch('verificar-sesion.php')
                 .then(response => {
                     if (!response.ok) {
@@ -79,9 +155,11 @@
                         return;
                     }
                     document.getElementById('nombre-usuario').textContent = data.usuario;
-
                     window.usuarioEmail = data.email;
-                    //
+
+                    // Cargar prods existentes en la sesión
+                    cargarProductos();
+
                 })
                 .catch(error => {
                     console.error('Error verificando la sesión:', error);
@@ -89,6 +167,7 @@
                     window.location.href = 'index.html';
                 });
         }
+
         function cerrarSesion() {
             fetch('cerrar-sesion.php')
                 .then(response => response.json())
@@ -98,18 +177,17 @@
                 })
                 .catch(error => {
                     console.error('Error cerrando la sesión:', error);
-                    // Incluso si hay error, redirigimos al login
                     window.location.href = 'index.html';
                 });
         }
 
         function nuevoDiv() {
-            // contenedor principal
+            // Contenedor principal
             const contenedor = document.getElementById('mostrar-lista');
 
             // Creamos el nuevo div
             const nuevoContenedor = document.createElement('div');
-            nuevoContenedor.classList.add('item-compra'); // Clase para estilizar
+            nuevoContenedor.classList.add('item-compra');
 
             // Input 
             const input = document.createElement('input');
@@ -126,7 +204,7 @@
             const botonMas = document.createElement('button');
             botonMas.textContent = '+';
             botonMas.classList.add('sumar');
-            // funcionalidad al botón +
+            // Funcionalidad al botón +
             botonMas.addEventListener('click', function () {
                 let valor = parseInt(cantidad.textContent);
                 cantidad.textContent = valor + 1;
@@ -136,7 +214,7 @@
             const botonMenos = document.createElement('button');
             botonMenos.textContent = '-';
             botonMenos.classList.add('quitar');
-            // funcionalidad al botón -
+            // Funcionalidad al botón -
             botonMenos.addEventListener('click', function () {
                 let valor = parseInt(cantidad.textContent);
                 if (valor > 0) {
@@ -148,8 +226,8 @@
             const botonAdd = document.createElement('button');
             botonAdd.textContent = 'Añadir';
             botonAdd.classList.add('enviar');
-            // TODO: funcionalidad AJAX más adelante
 
+            // IAJAX para nuevo prod
             botonAdd.addEventListener('click', function () {
                 const articulo = input.value.trim();
                 const cantidadVal = parseInt(cantidad.textContent);
@@ -164,36 +242,252 @@
                     return;
                 }
 
-                // TODO: código para enviar a la base de datos
-                console.log('Artículo a añadir:', articulo, 'Cantidad:', cantidadVal);
-                alert('Función para añadir a la base de datos (pendiente de implementar)');
+                // Enviar a bd AJAX
+                fetch('compra.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        objeto: articulo,
+                        cantidad: cantidadVal
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Producto añadido correctamente');
+                            // Eliminamos el div después de añadir
+                            nuevoContenedor.remove();
+                            // Recargamos los prods para ver el nuevo
+                            cargarProductos();
+                        } else {
+                            alert('Error al añadir el producto: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al conectar con el servidor');
+                    });
             });
 
             // Botón eliminar
             const botonEliminar = document.createElement('button');
             botonEliminar.textContent = 'Eliminar';
             botonEliminar.classList.add('eliminar');
-            // funcionalidad al botón eliminar
+            // Funcionalidad al botón eliminar
             botonEliminar.addEventListener('click', function () {
-                // Eliminamos el contenedor
                 nuevoContenedor.remove();
             });
 
-            // Añadimos todos los elementos al contenedor
-            nuevoContenedor.append(input);
-            nuevoContenedor.append(cantidad);
-            nuevoContenedor.append(botonMas);
-            nuevoContenedor.append(botonMenos);
-            nuevoContenedor.append(botonAdd);
-            nuevoContenedor.append(botonEliminar);
+            // Añadir elementos
+            nuevoContenedor.appendChild(input);
+            nuevoContenedor.appendChild(cantidad);
+            nuevoContenedor.appendChild(botonMas);
+            nuevoContenedor.appendChild(botonMenos);
+            nuevoContenedor.appendChild(botonAdd);
+            nuevoContenedor.appendChild(botonEliminar);
 
-            // Añadimos el contenedor nuevo al contenedor principal
             contenedor.appendChild(nuevoContenedor);
         }
 
-        //  Añadir artículo
-        document.getElementById('add').addEventListener('click', nuevoDiv);
+        function cargarProductos() {
+            fetch('compra.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Guardamos lista prods
+                        mostrarProductos(data.productos);
 
+                        // Actualizamos última fecha 
+                        if (data.productos && data.productos.length > 0) {
+                            // Encontrar fecha más reciente
+                            let fechaMasReciente = data.productos[0].fecha_hora;
+                            for (let i = 1; i < data.productos.length; i++) {
+                                if (new Date(data.productos[i].fecha_hora) > new Date(fechaMasReciente)) {
+                                    fechaMasReciente = data.productos[i].fecha_hora;
+                                }
+                            }
+                            ultimaFecha = fechaMasReciente;
+                            console.log("Fecha más reciente encontrada:", ultimaFecha);
+                        } else {
+                            // Si no hay prods, usamos la fecha actual
+                            ultimaFecha = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                            console.log("No hay productos, usando fecha actual:", ultimaFecha);
+                        }
+
+                        // Iniciar después de cargar y tener la fecha
+                        iniciarTemporizador();
+                    } else {
+                        alert('Error al cargar los productos: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al conectar con el servidor');
+                });
+        }
+
+        function mostrarProductos(productos) {
+            const contenedor = document.getElementById('productos-guardados');
+            contenedor.innerHTML = ''; 
+
+            if (!productos || productos.length === 0) {
+                contenedor.innerHTML = '<p>No hay productos en la lista</p>';
+                return;
+            }
+
+            // Ordenar prods del + nuevo al + viejo
+            productos.sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
+
+            // Creamos un elemento para cada prod
+            productos.forEach(producto => {
+                const productoDiv = document.createElement('div');
+                productoDiv.classList.add('producto');
+                productoDiv.dataset.id = producto.id_compra;
+
+                const productoInfo = document.createElement('div');
+                productoInfo.classList.add('producto-info');
+
+                // Info del prod
+                const productoNombre = document.createElement('strong');
+                productoNombre.textContent = producto.objeto;
+
+                const productoCantidad = document.createElement('span');
+                productoCantidad.textContent = ` (${producto.cantidad})`;
+
+                const productoUsuario = document.createElement('em');
+                productoUsuario.textContent = ` - Añadido por: ${producto.nombre_usuario}`;
+
+                productoInfo.appendChild(productoNombre);
+                productoInfo.appendChild(productoCantidad);
+                productoInfo.appendChild(productoUsuario);
+
+                // Si el prod fue añadido por el usuario, mostrar botón eliminar!!
+                const productoAcciones = document.createElement('div');
+                productoAcciones.classList.add('producto-acciones');
+
+                if (producto.id_comprador === window.usuarioEmail) {
+                    const botonEliminar = document.createElement('button');
+                    botonEliminar.textContent = 'Eliminar';
+                    botonEliminar.classList.add('eliminar');
+                    botonEliminar.addEventListener('click', function () {
+                        eliminarProducto(producto.id_compra);
+                    });
+                    productoAcciones.appendChild(botonEliminar);
+                }
+
+                productoDiv.appendChild(productoInfo);
+                productoDiv.appendChild(productoAcciones);
+
+                contenedor.appendChild(productoDiv);
+            });
+        }
+        function eliminarProducto(idCompra) {
+            if (confirm('¿Estás seguro de eliminar este producto?')) {
+                fetch('compra.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_compra: idCompra
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Producto eliminado correctamente');
+                            // Recargamos la lista de prods
+                            cargarProductos();
+                        } else {
+                            alert('Error al eliminar el producto: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al conectar con el servidor');
+                    });
+            }
+        }
+
+        function iniciarTemporizador() {
+            if (temporizador) {
+                clearInterval(temporizador);
+            }
+
+            temporizador = setInterval(verificarNuevosProductos, 3000);
+        }
+
+        function verificarNuevosProductos() {
+            // Sin fecha no hacemos nada
+            console.log(ultimaFecha);
+            if (!ultimaFecha) return;
+
+            fetch('compra.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ultima_fecha: ultimaFecha
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Si prods nuevos, añadimos a la lista
+                        if (data.productos_nuevos && data.productos_nuevos.length > 0) {
+                            console.log("Se encontraron " + data.productos_nuevos.length + " productos nuevos");
+
+                            // Cargar nuevos prods lista existente
+                            const contenedor = document.getElementById('productos-guardados');
+
+                            // Añadir nuevos prods a la lista
+                            data.productos_nuevos.forEach(producto => {
+                                const productoDiv = document.createElement('div');
+                                productoDiv.classList.add('producto');
+                                productoDiv.dataset.id = producto.id_compra;
+
+                                const productoInfo = document.createElement('div');
+                                productoInfo.classList.add('producto-info');
+
+                                // Info del prod
+                                const productoNombre = document.createElement('strong');
+                                productoNombre.textContent = producto.objeto;
+
+                                const productoCantidad = document.createElement('span');
+                                productoCantidad.textContent = ` (${producto.cantidad})`;
+
+                                const productoUsuario = document.createElement('em');
+                                productoUsuario.textContent = ` - Añadido por: ${producto.nombre_usuario}`;
+
+                                productoInfo.appendChild(productoNombre);
+                                productoInfo.appendChild(productoCantidad);
+                                productoInfo.appendChild(productoUsuario);
+
+                                productoDiv.appendChild(productoInfo);
+                                contenedor.appendChild(productoDiv);
+                            });
+
+                            console.log('Se han añadido ' + data.productos_nuevos.length + ' nuevos productos a la lista');
+                        } else {
+                            console.log("No se encontraron productos nuevos");
+                        }
+
+                        // Actualizamos última fecha
+                        if (data.fecha_actual) {
+                            console.log("Actualizando última fecha a: " + data.fecha_actual);
+                            ultimaFecha = data.fecha_actual;
+                        }
+                    } else {
+                        console.error("Error en la respuesta del servidor:", data.message || "Error desconocido");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al verificar nuevos productos:', error);
+                });
+        }
     </script>
 </body>
 

@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
 $dbNombre = 'listacompra';
-$username = 'root';
-$password = '';
+$username = 'compra';
+$password = '123456';
 
 try {
     //Crear nueva PDO
