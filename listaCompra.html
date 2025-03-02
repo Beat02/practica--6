@@ -13,6 +13,11 @@
 </head>
 
 <body>
+    <div id="usuario-info">
+        <span>Usuario: <span id="nombre-usuario">Cargando...</span></span>
+        <button id="cerrar-sesion">Cerrar sesión</button>
+    </div>
+
     <div id="contenedor">
         <h1>Lista de la compra:</h1>
     </div>
@@ -22,6 +27,40 @@
 
     </div>
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            verficarSesion();
+
+            document.getElementById('cerrar-sesion').addEventListener('click',cerrarSesion);
+        });
+
+        function verficarSesion(){
+
+            fetch('verificar-sesion.php')
+            .then(response=>{
+                if(!response.ok){
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data=>{
+                console.log('Respuesta de verificación: ', data);
+
+                if(!data.autenticado){
+                    alert('Debes iniciar sesión para acceder a tu lista de la compra');
+                    window.location.href='index.html';
+                    return;
+                }
+                document.getElementById('nombre-usuario').textContent=data.usuario;
+
+                window.usuarioEmail=data.email;
+                //
+            })
+            .catch(error=>{
+                console.error('Error verificando la sesión:', error);
+                    alert('Error al verificar la sesión. Serás redirigido al login.');
+                    window.location.href = 'index.html';
+            })
+        }
 
     </script>
 </body>
