@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <form method="post" id="formulario">
+    <form method="POST" id="formulario">
         <label for="email">Correo electrónico:</label>
         <input type="email" id="email" name="email" required>
         <span id="errorEmail" style="color: red;"></span>
@@ -33,11 +33,13 @@
         const emailNodo = document.getElementById("email");
         const passwordNodo = document.getElementById("password");
 
-        const emailValue = emailNodo.value;
-        const passwordValue = passwordNodo.value;
 
         document.getElementById("formulario").addEventListener("submit", function (event) {
             event.preventDefault();
+
+            const emailValue = document.getElementById("email").value;
+            const passwordValue = document.getElementById("password").value;
+
             //AJAX
             fetch('login.php', {
                 method: 'POST',
@@ -48,23 +50,36 @@
                     email: emailValue,
                     password: passwordValue
                 })
-
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.text(); // Primero obtén el texto
+                })
+                .then(text => {
+                    console.log("Respuesta del servidor:", text); // Verifica qué devuelve
+                    try {
+                        return JSON.parse(text); // Luego intenta parsearlo como JSON
+                    } catch (e) {
+                        console.error("Error al parsear JSON:", e);
+                        throw e;
+                    }
+                })
                 .then(data => {
                     //respuesta servidor
                     if (data.success) {
                         window.location.href = 'listaCompra.html';
                     } else {
-                        alert('Error en el login')
+                        alert('Error en el login: ' + (data.error || 'Credenciales incorrectas'));
                     }
                 })
                 .catch(error => {
                     //manejar errores
-                    console.error('Error:', error);
-                })
+                    console.error('Error completo:', error);
+                    alert('Error de conexión: ' + error.message);
+                });
         });
-
 
     </script>
 
