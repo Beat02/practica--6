@@ -8,8 +8,33 @@
     <meta name="keywords" content="HTML, CSS, JavaScript">
     <meta name="author" content="Beatriz R.">
     <title>Lista de la compra</title>
-    <!-- <link rel="stylesheet" href="styles.css">
-    <script defer src="script.js"></script> -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #usuario-info {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        #add {
+            margin: 20px 0;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #add:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 
 <body>
@@ -28,39 +53,146 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // sesion activa?
             verficarSesion();
-
-            document.getElementById('cerrar-sesion').addEventListener('click',cerrarSesion);
+            // cerrar sesión
+            document.getElementById('cerrar-sesion').addEventListener('click', cerrarSesion);
+            // botón "Añadir artículo"
+            document.getElementById('add').addEventListener('click', nuevoDiv);
         });
 
-        function verficarSesion(){
+        function verficarSesion() {
 
             fetch('verificar-sesion.php')
-            .then(response=>{
-                if(!response.ok){
-                    throw new Error('Error en la respuesta del servidor');
-                }
-                return response.json();
-            })
-            .then(data=>{
-                console.log('Respuesta de verificación: ', data);
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta de verificación: ', data);
 
-                if(!data.autenticado){
-                    alert('Debes iniciar sesión para acceder a tu lista de la compra');
-                    window.location.href='index.html';
-                    return;
-                }
-                document.getElementById('nombre-usuario').textContent=data.usuario;
+                    if (!data.autenticado) {
+                        alert('Debes iniciar sesión para acceder a tu lista de la compra');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                    document.getElementById('nombre-usuario').textContent = data.usuario;
 
-                window.usuarioEmail=data.email;
-                //
-            })
-            .catch(error=>{
-                console.error('Error verificando la sesión:', error);
+                    window.usuarioEmail = data.email;
+                    //
+                })
+                .catch(error => {
+                    console.error('Error verificando la sesión:', error);
                     alert('Error al verificar la sesión. Serás redirigido al login.');
                     window.location.href = 'index.html';
-            })
+                });
         }
+        function cerrarSesion() {
+            fetch('cerrar-sesion.php')
+                .then(response => response.json())
+                .then(data => {
+                    alert('Sesión cerrada correctamente');
+                    window.location.href = 'index.html';
+                })
+                .catch(error => {
+                    console.error('Error cerrando la sesión:', error);
+                    // Incluso si hay error, redirigimos al login
+                    window.location.href = 'index.html';
+                });
+        }
+
+        function nuevoDiv() {
+            // contenedor principal
+            const contenedor = document.getElementById('mostrar-lista');
+
+            // Creamos el nuevo div
+            const nuevoContenedor = document.createElement('div');
+            nuevoContenedor.classList.add('item-compra'); // Clase para estilizar
+
+            // Input 
+            const input = document.createElement('input');
+            input.setAttribute('type', 'text');
+            input.setAttribute('placeholder', 'Nombre del artículo');
+            input.classList.add('input-articulo');
+
+            // Span 
+            const cantidad = document.createElement('span');
+            cantidad.textContent = '0';
+            cantidad.classList.add('cantidad');
+
+            // Botón más
+            const botonMas = document.createElement('button');
+            botonMas.textContent = '+';
+            botonMas.classList.add('sumar');
+            // funcionalidad al botón +
+            botonMas.addEventListener('click', function () {
+                let valor = parseInt(cantidad.textContent);
+                cantidad.textContent = valor + 1;
+            });
+
+            // Botón menos
+            const botonMenos = document.createElement('button');
+            botonMenos.textContent = '-';
+            botonMenos.classList.add('quitar');
+            // funcionalidad al botón -
+            botonMenos.addEventListener('click', function () {
+                let valor = parseInt(cantidad.textContent);
+                if (valor > 0) {
+                    cantidad.textContent = valor - 1;
+                }
+            });
+
+            // Botón añadir
+            const botonAdd = document.createElement('button');
+            botonAdd.textContent = 'Añadir';
+            botonAdd.classList.add('enviar');
+            // TODO: funcionalidad AJAX más adelante
+
+            botonAdd.addEventListener('click', function () {
+                const articulo = input.value.trim();
+                const cantidadVal = parseInt(cantidad.textContent);
+
+                if (articulo === '') {
+                    alert('Debes ingresar el nombre del artículo');
+                    return;
+                }
+
+                if (cantidadVal === 0) {
+                    alert('La cantidad debe ser mayor a 0');
+                    return;
+                }
+
+                // TODO: código para enviar a la base de datos
+                console.log('Artículo a añadir:', articulo, 'Cantidad:', cantidadVal);
+                alert('Función para añadir a la base de datos (pendiente de implementar)');
+            });
+
+            // Botón eliminar
+            const botonEliminar = document.createElement('button');
+            botonEliminar.textContent = 'Eliminar';
+            botonEliminar.classList.add('eliminar');
+            // funcionalidad al botón eliminar
+            botonEliminar.addEventListener('click', function () {
+                // Eliminamos el contenedor
+                nuevoContenedor.remove();
+            });
+
+            // Añadimos todos los elementos al contenedor
+            nuevoContenedor.append(input);
+            nuevoContenedor.append(cantidad);
+            nuevoContenedor.append(botonMas);
+            nuevoContenedor.append(botonMenos);
+            nuevoContenedor.append(botonAdd);
+            nuevoContenedor.append(botonEliminar);
+
+            // Añadimos el contenedor nuevo al contenedor principal
+            contenedor.appendChild(nuevoContenedor);
+        }
+
+        //  Añadir artículo
+        document.getElementById('add').addEventListener('click', nuevoDiv);
 
     </script>
 </body>
